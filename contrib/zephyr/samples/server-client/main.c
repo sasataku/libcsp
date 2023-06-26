@@ -5,6 +5,7 @@
 
 #include <csp/csp.h>
 #include <csp/drivers/usart.h>
+#include <csp/drivers/can_socketcan.h>
 
 
 /* These three functions must be provided in arch specific way */
@@ -16,11 +17,14 @@ void client_start(void);
 #define MY_SERVER_PORT		10
 
 /* Commandline options */
+//static uint8_t server_address = 20;
 static uint8_t server_address = 255;
 
 /* test mode, used for verifying that host & client can exchange packets over the loopback interface */
-static bool test_mode = true;
+static bool test_mode = false;
 static unsigned int server_received = 0;
+
+extern csp_conf_t csp_conf;
 
 /* Server task - handles requests from clients */
 void server(void) {
@@ -66,7 +70,6 @@ void server(void) {
 
 		/* Close current connection */
 		csp_close(conn);
-
 	}
 
 	return;
@@ -83,7 +86,7 @@ void client(void) {
 
 	while (1) {
 
-		usleep(test_mode ? 200000 : 1000000);
+		k_sleep(test_mode ? K_USEC(200000) : K_USEC(1000000));
 
 		/* Send ping to server, timeout 1000 mS, ping size 100 bytes */
 		int result = csp_ping(server_address, 1000, 100, CSP_O_NONE);
@@ -124,8 +127,12 @@ void client(void) {
 		/* 5. Send packet */
 		csp_send(conn, packet);
 
-		/* 6. Close connection */
+		// 6. Free packet buffer
+		csp_buffer_free(packet);
+
+		/* 7. Close connection */
 		csp_close(conn);
+
 	}
 
 	return;
@@ -135,11 +142,15 @@ void client(void) {
 /* main - initialization of CSP and start of server/client tasks */
 void main(void) {
 
-	uint8_t address = 0;
+	uint8_t address = 10;
 	const char * kiss_device = NULL;
+	const char * can_device = "can0";
 	const char * rtable = NULL;
 
 	csp_print("Initialising CSP");
+
+	/* Specific version */
+	csp_conf.version = 1;
 
 	/* Init CSP */
 	csp_init();
@@ -160,6 +171,13 @@ void main(void) {
 		int error = csp_usart_open_and_add_kiss_interface(&conf, CSP_IF_KISS_DEFAULT_NAME,	&default_iface);
 		if (error != CSP_ERR_NONE) {
 			csp_print("failed to add KISS interface [%s], error: %d\n", kiss_device, error);
+			exit(1);
+		}
+	}
+	if (can_device) {
+		int error = csp_can_socketcan_open_and_add_interface(can_device, CSP_IF_CAN_DEFAULT_NAME, address, 1000000, false, &default_iface);
+		if (error != CSP_ERR_NONE) {
+			csp_print("failed to add CAN interface [%s], error: %d\n", can_device, error);
 			exit(1);
 		}
 	}

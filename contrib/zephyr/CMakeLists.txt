@@ -3,6 +3,7 @@ if(CONFIG_LIBCSP)
   set(CMAKE_BUILD_TYPE None)
 
   set(CSP_PRINT_STDIO ON)
+  set(HAVE_LIBSOCKETCAN ON)
 
   # check_include_file() doesn't work in Zephyr module
   # https://github.com/zephyrproject-rtos/zephyr/issues/31193

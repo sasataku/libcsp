@@ -13,6 +13,10 @@ if(LIBSOCKETCAN_FOUND)
   endif()
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Zephyr")
+  target_sources(csp PRIVATE can/can_socketcan_zephyr.c)
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_sources(csp PRIVATE usart/usart_linux.c)
 endif()
