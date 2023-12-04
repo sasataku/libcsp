@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 void server(void);
+void sensor(void);
 
 static int csp_pthread_create(void * (*routine)(void *)) {
 
@@ -41,10 +42,19 @@ static void * task_server(void * param) {
 	return NULL;
 }
 
+static void * task_sensor(void * param) {
+	sensor();
+	return NULL;
+}
+
 int router_start(void) {
 	return csp_pthread_create(task_router);
 }
 
 int server_start(void) {
 	return csp_pthread_create(task_server);
+}
+
+int sensor_start(void) {
+	return csp_pthread_create(task_sensor);
 }
