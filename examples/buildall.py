@@ -13,6 +13,7 @@ def build_with_meson():
                'examples/csp_server',
                'examples/csp_client',
                'examples/csp_bridge_can2udp',
+               'examples/csp_bridge_kiss2udp',
                'examples/csp_arch',
                'examples/zmqproxy']
     builddir = 'build'
